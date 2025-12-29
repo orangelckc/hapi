@@ -78,23 +78,24 @@ function SessionsPage() {
     return (
         <div className="flex h-full flex-col">
             <div className="bg-[var(--app-bg)] pt-[env(safe-area-inset-top)]">
-                <div className="mx-auto w-full max-w-content flex items-center justify-between px-3 py-2">
-                    <div className="text-xs text-[var(--app-hint)]">
+                <div className="mx-auto w-full max-w-content flex items-center justify-between px-4 py-3">
+                    <div className="text-sm text-[var(--app-hint)] font-medium">
                         {sessions.length} sessions
                     </div>
                     <button
                         type="button"
                         onClick={() => navigate({ to: '/sessions/new' })}
-                        className="session-list-new-button p-1.5 rounded-full text-[var(--app-link)] transition-colors"
+                        className="session-list-new-button p-2.5 rounded-full text-[var(--app-link)] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                         title="New Session"
+                        aria-label="Create new session"
                     >
-                        <PlusIcon className="h-5 w-5" />
+                        <PlusIcon className="h-6 w-6" />
                     </button>
                 </div>
             </div>
             <div className="flex-1 overflow-y-auto">
                 {error ? (
-                    <div className="mx-auto w-full max-w-content px-3 py-2">
+                    <div className="mx-auto w-full max-w-content px-4 py-3">
                         <div className="text-sm text-red-600">{error}</div>
                     </div>
                 ) : null}
@@ -202,21 +203,22 @@ function NewSessionPage() {
 
     return (
         <div className="flex-1 overflow-y-auto">
-            <div className="flex items-center gap-2 border-b border-[var(--app-border)] bg-[var(--app-bg)] p-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
+            <div className="flex items-center gap-3 border-b border-[var(--app-border)] bg-[var(--app-bg)] px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
                 {!isTelegramApp() && (
                     <button
                         type="button"
                         onClick={goBack}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--app-hint)] transition-colors hover:bg-[var(--app-secondary-bg)] hover:text-[var(--app-fg)]"
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--app-hint)] transition-colors hover:bg-[var(--app-secondary-bg)] hover:text-[var(--app-fg)] active:bg-[var(--app-secondary-bg)] min-h-[44px] min-w-[44px]"
+                        aria-label="Go back"
                     >
                         <BackIcon />
                     </button>
                 )}
-                <div className="flex-1 font-semibold">Create Session</div>
+                <div className="flex-1 text-lg font-semibold">Create Session</div>
             </div>
 
             {machinesError ? (
-                <div className="p-3 text-sm text-red-600">
+                <div className="p-4 text-sm text-red-600">
                     {machinesError}
                 </div>
             ) : null}

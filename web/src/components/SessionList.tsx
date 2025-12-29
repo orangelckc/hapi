@@ -105,17 +105,18 @@ export function SessionList(props: {
     return (
         <div className="mx-auto w-full max-w-content flex flex-col">
             {renderHeader ? (
-                <div className="flex items-center justify-between px-3 py-1">
-                    <div className="text-xs text-[var(--app-hint)]">
+                <div className="flex items-center justify-between px-4 py-2">
+                    <div className="text-sm text-[var(--app-hint)] font-medium">
                         {props.sessions.length} sessions
                     </div>
                     <button
                         type="button"
                         onClick={props.onNewSession}
-                        className="session-list-new-button p-1.5 rounded-full text-[var(--app-link)] transition-colors"
+                        className="session-list-new-button p-2.5 rounded-full text-[var(--app-link)] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                         title="New Session"
+                        aria-label="Create new session"
                     >
-                        <PlusIcon className="h-5 w-5" />
+                        <PlusIcon className="h-6 w-6" />
                     </button>
                 </div>
             ) : null}
@@ -126,44 +127,44 @@ export function SessionList(props: {
                         key={s.id}
                         type="button"
                         onClick={() => props.onSelect(s.id)}
-                        className="session-list-item flex w-full flex-col gap-1.5 px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-link)]"
+                        className="session-list-item flex w-full flex-col gap-2 px-4 py-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-link)] min-h-[88px] active:bg-[var(--app-subtle-bg)]"
                     >
                         <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex items-center gap-2.5 min-w-0">
                                 <span
-                                    className={`h-2 w-2 rounded-full ${s.active ? 'bg-[var(--app-badge-success-text)]' : 'bg-[var(--app-hint)]'}`}
+                                    className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${s.active ? 'bg-[var(--app-badge-success-text)]' : 'bg-[var(--app-hint)]'}`}
                                     aria-hidden="true"
                                 />
-                                <div className="truncate text-sm font-medium">
+                                <div className="truncate text-base font-medium leading-snug">
                                     {getSessionTitle(s)}
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0 text-xs">
+                            <div className="flex items-center gap-2.5 shrink-0 text-xs">
                                 {(() => {
                                     const progress = getTodoProgress(s)
                                     if (!progress) return null
                                     return (
-                                        <span className="flex items-center gap-1 text-[var(--app-hint)]">
-                                            <BulbIcon className="h-3 w-3" />
-                                            {progress.completed}/{progress.total}
+                                        <span className="flex items-center gap-1.5 text-[var(--app-hint)]">
+                                            <BulbIcon className="h-3.5 w-3.5" />
+                                            <span className="font-medium">{progress.completed}/{progress.total}</span>
                                         </span>
                                     )
                                 })()}
                                 {s.pendingRequestsCount > 0 ? (
-                                    <span className="text-[var(--app-badge-warning-text)]">
-                                        pending {s.pendingRequestsCount}
+                                    <span className="text-[var(--app-badge-warning-text)] font-medium px-1.5 py-0.5 bg-[var(--app-badge-warning-bg)] rounded">
+                                        {s.pendingRequestsCount}
                                     </span>
                                 ) : null}
                             </div>
                         </div>
-                        <div className="truncate text-xs text-[var(--app-hint)]">
+                        <div className="truncate text-sm text-[var(--app-hint)] leading-relaxed">
                             {s.metadata?.path ?? s.id}
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--app-hint)]">
-                            <span>❖ {getAgentLabel(s)}</span>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[var(--app-hint)]">
+                            <span className="font-medium">❖ {getAgentLabel(s)}</span>
                             <span>model: {getModelLabel(s)}</span>
                             {s.metadata?.worktree?.branch ? (
-                                <span>worktree: {s.metadata.worktree.branch}</span>
+                                <span className="truncate max-w-[200px]">worktree: {s.metadata.worktree.branch}</span>
                             ) : null}
                             {(() => {
                                 const lastSeen = getLastSeenLabel(s)

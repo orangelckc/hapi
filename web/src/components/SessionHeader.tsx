@@ -51,12 +51,13 @@ export function SessionHeader(props: {
 
     return (
         <div className="bg-[var(--app-bg)] pt-[env(safe-area-inset-top)]">
-            <div className="mx-auto w-full max-w-content flex items-center gap-2 p-3">
+            <div className="mx-auto w-full max-w-content flex items-center gap-3 px-4 py-3">
                 {/* Back button */}
                 <button
                     type="button"
                     onClick={props.onBack}
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--app-hint)] transition-colors hover:bg-[var(--app-secondary-bg)] hover:text-[var(--app-fg)]"
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--app-hint)] transition-colors hover:bg-[var(--app-secondary-bg)] hover:text-[var(--app-fg)] active:bg-[var(--app-secondary-bg)] min-h-[44px] min-w-[44px]"
+                    aria-label="Go back"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -75,10 +76,10 @@ export function SessionHeader(props: {
 
                 {/* Session info - two lines: title and path */}
                 <div className="min-w-0 flex-1">
-                    <div className="truncate font-semibold">
+                    <div className="truncate text-base font-semibold leading-snug">
                         {title}
                     </div>
-                    <div className="text-xs text-[var(--app-hint)] truncate">
+                    <div className="text-sm text-[var(--app-hint)] truncate leading-relaxed">
                         {props.session.metadata?.path ?? props.session.id}
                         {worktreeBranch ? ` • worktree: ${worktreeBranch}` : ''}
                     </div>
@@ -88,8 +89,9 @@ export function SessionHeader(props: {
                     <button
                         type="button"
                         onClick={props.onViewFiles}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--app-hint)] transition-colors hover:bg-[var(--app-secondary-bg)] hover:text-[var(--app-fg)]"
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--app-hint)] transition-colors hover:bg-[var(--app-secondary-bg)] hover:text-[var(--app-fg)] active:bg-[var(--app-secondary-bg)] min-h-[44px] min-w-[44px]"
                         title="Files"
+                        aria-label="View files"
                     >
                         <FilesIcon />
                     </button>
