@@ -185,6 +185,9 @@ bun run build:single-exe
 ## Docs
 
 - `docs/WHY_NOT_HAPPY.md` - Why HAPI exists: architectural differences from Happy
+- `docs/MOBILE_ADAPTATION.md` - 移动端适配指南 (Chinese mobile adaptation guide)
+- `docs/MOBILE_ADAPTATION_EN.md` - Mobile adaptation summary (English)
+- `docs/MOBILE_VISUAL_GUIDE.md` - Visual guide for mobile improvements
 - `cli/README.md` - CLI usage and config
 - `server/README.md` - Server setup and architecture
 - `web/README.md` - Web app behavior and dev workflow
