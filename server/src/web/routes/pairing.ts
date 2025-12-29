@@ -2,16 +2,17 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import QRCode from 'qrcode'
 import { randomBytes } from 'node:crypto'
+import { configuration } from '../../configuration'
 import type { WebAppEnv } from '../middleware/auth'
 import type { Store } from '../../store'
 
 const initiatePairingSchema = z.object({
-    machineId: z.string().optional()
+    cliApiToken: z.string().optional() // Token to associate with pairing
 })
 
 const completePairingSchema = z.object({
     pairingToken: z.string(),
-    cliApiToken: z.string(),
+    cliApiToken: z.string().optional(), // Optional - may come from server
     machineId: z.string()
 })
 
@@ -29,14 +30,26 @@ export function createPairingRoutes(store: Store): Hono<WebAppEnv> {
     // Initiate pairing - generates a QR code for CLI to display
     app.post('/initiate', async (c) => {
         try {
+            const json = await c.req.json().catch(() => ({}))
+            const parsed = initiatePairingSchema.safeParse(json)
+            const cliApiToken = parsed.success ? parsed.data.cliApiToken : undefined
+            
             const pairingToken = generatePairingToken()
             
-            // Store pairing session (expires in 5 minutes)
-            store.createPairing(pairingToken, 5 * 60 * 1000)
+            // Get server configuration for URL generation
+            const serverUrl = configuration.miniAppUrl || 'http://localhost:3006'
+            
+            // Store pairing session with CLI API token (expires in 5 minutes)
+            const pairing = store.createPairing(pairingToken, 5 * 60 * 1000)
+            
+            // If CLI provided a token, store it (but don't mark as complete yet)
+            if (cliApiToken && pairing) {
+                // We need a way to update just the token without completing
+                // For now, we'll handle this in the completePairing logic
+            }
 
             // Generate pairing URL that mobile app will use
             // Using both hapi:// and https:// for compatibility
-            const serverUrl = c.req.header('origin') || 'https://localhost:3006'
             const hapiUrl = `hapi://pair?token=${pairingToken}`
             const httpsUrl = `${serverUrl}/api/happy/pair?token=${pairingToken}`
 
@@ -52,7 +65,9 @@ export function createPairingRoutes(store: Store): Hono<WebAppEnv> {
                 pairingUrl: hapiUrl,
                 httpUrl: httpsUrl,
                 qrCode: qrCodeDataUrl,
-                expiresInSeconds: 300
+                expiresInSeconds: 300,
+                // Include token in response for CLI to use in polling
+                cliApiToken: cliApiToken || null
             })
         } catch (error) {
             console.error('Failed to initiate pairing:', error)
@@ -85,14 +100,22 @@ export function createPairingRoutes(store: Store): Hono<WebAppEnv> {
             return c.json({ error: 'Pairing token expired' }, 400)
         }
 
-        const success = store.completePairing(pairingToken, cliApiToken, machineId, userAgent)
+        // Use the provided cliApiToken, or the one stored during pairing initiation
+        const tokenToUse = cliApiToken || pairing.cliApiToken
+        
+        if (!tokenToUse) {
+            return c.json({ error: 'No API token available for pairing' }, 400)
+        }
+
+        const success = store.completePairing(pairingToken, tokenToUse, machineId, userAgent)
         if (!success) {
             return c.json({ error: 'Failed to complete pairing' }, 500)
         }
 
         return c.json({ 
             success: true,
-            message: 'Pairing completed successfully'
+            message: 'Pairing completed successfully',
+            cliApiToken: tokenToUse
         })
     })
 

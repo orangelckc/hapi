@@ -92,15 +92,14 @@ export function LoginPrompt(props: LoginPromptProps) {
                 return
             }
 
-            // Get machine ID from settings or generate one
-            const machineId = `web-${Date.now()}`
+            // Generate a unique machine ID for this device
+            const machineId = crypto.randomUUID ? crypto.randomUUID() : `web-${Date.now()}-${Math.random().toString(36).substring(2)}`
             
-            // Get CLI API token from server settings
-            // Note: In a real implementation, you'd need to get this from the server
-            // For now, we'll use a placeholder
-            const cliApiToken = localStorage.getItem('cliApiToken') || 'placeholder-token'
+            // Note: For QR pairing, the server generates and returns the CLI API token
+            // The mobile/web client doesn't need to provide it during pairing
+            // Instead, the server will return it after successful pairing
 
-            // Complete pairing
+            // Complete pairing - server will provide the API token
             const baseUrl = props.baseUrl
             const completeUrl = baseUrl ? `${baseUrl}/api/pairing/complete` : '/api/pairing/complete'
             const res = await fetch(completeUrl, {
@@ -108,7 +107,9 @@ export function LoginPrompt(props: LoginPromptProps) {
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({
                     pairingToken,
-                    cliApiToken,
+                    // For web-based pairing, we need to request the token from server
+                    // The server should have the cliApiToken from when the CLI initiated pairing
+                    cliApiToken: '', // Server will use the stored token
                     machineId
                 })
             })
@@ -118,10 +119,21 @@ export function LoginPrompt(props: LoginPromptProps) {
                 throw new Error(`Pairing failed: ${body}`)
             }
 
-            // Login with the token
+            const data = await res.json()
+            
+            // Server should return the cliApiToken in the response
+            if (!data.cliApiToken) {
+                throw new Error('Server did not return authentication token')
+            }
+
+            // Login with the received token
             const client = new ApiClient('', { baseUrl: props.baseUrl })
-            await client.authenticate({ accessToken: cliApiToken })
-            props.onLogin(cliApiToken)
+            await client.authenticate({ accessToken: data.cliApiToken })
+            
+            // Store token for future use
+            localStorage.setItem('cliApiToken', data.cliApiToken)
+            
+            props.onLogin(data.cliApiToken)
         } catch (e) {
             setError(e instanceof Error ? e.message : 'Failed to complete pairing')
         } finally {

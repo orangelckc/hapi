@@ -2,8 +2,6 @@ import chalk from 'chalk'
 import axios from 'axios'
 import { configuration } from '@/configuration'
 import { updateSettings } from '@/persistence'
-
-// @ts-ignore - qrcode-terminal doesn't have types
 import qrcode from 'qrcode-terminal'
 
 interface PairingInitResponse {
@@ -27,9 +25,13 @@ export async function handleQrPairCommand(): Promise<void> {
     try {
         // Request pairing initiation from server
         const serverUrl = configuration.serverUrl
+        
+        // Get the current CLI API token to associate with pairing
+        const currentToken = configuration.cliApiToken
+        
         const initResponse = await axios.post<PairingInitResponse>(
             `${serverUrl}/api/pairing/initiate`,
-            {},
+            { cliApiToken: currentToken }, // Include token so server can store it
             { timeout: 10000 }
         )
 

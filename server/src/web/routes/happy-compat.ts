@@ -52,7 +52,12 @@ export function createHappyCompatRoutes(
 
             // For happy-mobile compatibility, we need to return the CLI API token
             // that was generated during pairing initiation
-            const cliApiToken = pairing.cliApiToken || `happy-${Date.now()}`
+            const cliApiToken = pairing.cliApiToken
+
+            if (!cliApiToken) {
+                // Pairing record is invalid - missing required token
+                return c.json({ error: 'Invalid pairing: missing authentication token' }, 400)
+            }
 
             const success = store.completePairing(token, cliApiToken, machineId, userAgent)
             if (!success) {

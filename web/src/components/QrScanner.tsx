@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Spinner } from '@/components/Spinner'
 
+// Scanner state constants from html5-qrcode
+const SCANNER_STATE_SCANNING = 2
+
 interface QrScannerProps {
     isOpen: boolean
     onClose: () => void
@@ -67,7 +70,7 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
             if (scannerRef.current) {
                 try {
                     const state = await scannerRef.current.getState()
-                    if (state === 2) { // Scanner.STATE_SCANNING
+                    if (state === SCANNER_STATE_SCANNING) {
                         await scannerRef.current.stop()
                     }
                 } catch (err) {
