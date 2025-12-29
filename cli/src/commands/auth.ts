@@ -4,6 +4,7 @@ import * as readline from 'node:readline/promises'
 import { stdin as input, stdout as output } from 'node:process'
 import { configuration } from '@/configuration'
 import { readSettings, clearMachineId, updateSettings } from '@/persistence'
+import { handleQrPairCommand } from '@/ui/qrPair'
 
 export async function handleAuthCommand(args: string[]): Promise<void> {
     const subcommand = args[0]
@@ -67,6 +68,11 @@ export async function handleAuthCommand(args: string[]): Promise<void> {
         return
     }
 
+    if (subcommand === 'qr-pair') {
+        await handleQrPairCommand()
+        return
+    }
+
     if (subcommand === 'logout') {
         await updateSettings(current => ({
             ...current,
@@ -90,6 +96,7 @@ ${chalk.bold('hapi auth')} - Authentication management
 ${chalk.bold('Usage:')}
   hapi auth status            Show current configuration
   hapi auth login             Enter and save CLI_API_TOKEN
+  hapi auth qr-pair           Pair using QR code scan (mobile app)
   hapi auth logout            Clear saved credentials
 
 ${chalk.bold('Token priority (highest to lowest):')}

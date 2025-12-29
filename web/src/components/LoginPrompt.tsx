@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ApiClient } from '@/api/client'
 import { Spinner } from '@/components/Spinner'
+import { QrScanner } from '@/components/QrScanner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import type { ServerUrlResult } from '@/hooks/useServerUrl'
@@ -19,6 +20,7 @@ export function LoginPrompt(props: LoginPromptProps) {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [isServerDialogOpen, setIsServerDialogOpen] = useState(false)
+    const [isQrScannerOpen, setIsQrScannerOpen] = useState(false)
     const [serverInput, setServerInput] = useState(props.serverUrl ?? '')
     const [serverError, setServerError] = useState<string | null>(null)
 
@@ -72,6 +74,59 @@ export function LoginPrompt(props: LoginPromptProps) {
         setServerInput('')
         setServerError(null)
         setIsServerDialogOpen(false)
+    }, [props])
+
+    const handleQrScan = useCallback(async (pairingUrl: string) => {
+        setIsQrScannerOpen(false)
+        setIsLoading(true)
+        setError(null)
+
+        try {
+            // Extract token from pairing URL
+            const url = new URL(pairingUrl)
+            const pairingToken = url.searchParams.get('token')
+            
+            if (!pairingToken) {
+                setError('Invalid QR code: missing pairing token')
+                setIsLoading(false)
+                return
+            }
+
+            // Get machine ID from settings or generate one
+            const machineId = `web-${Date.now()}`
+            
+            // Get CLI API token from server settings
+            // Note: In a real implementation, you'd need to get this from the server
+            // For now, we'll use a placeholder
+            const cliApiToken = localStorage.getItem('cliApiToken') || 'placeholder-token'
+
+            // Complete pairing
+            const baseUrl = props.baseUrl
+            const completeUrl = baseUrl ? `${baseUrl}/api/pairing/complete` : '/api/pairing/complete'
+            const res = await fetch(completeUrl, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    pairingToken,
+                    cliApiToken,
+                    machineId
+                })
+            })
+
+            if (!res.ok) {
+                const body = await res.text().catch(() => '')
+                throw new Error(`Pairing failed: ${body}`)
+            }
+
+            // Login with the token
+            const client = new ApiClient('', { baseUrl: props.baseUrl })
+            await client.authenticate({ accessToken: cliApiToken })
+            props.onLogin(cliApiToken)
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Failed to complete pairing')
+        } finally {
+            setIsLoading(false)
+        }
     }, [props])
 
     const displayError = error || props.error
@@ -183,10 +238,36 @@ export function LoginPrompt(props: LoginPromptProps) {
                     </button>
                 </form>
 
+                {/* QR Code Pairing Option */}
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-[var(--app-border)]"></div>
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-[var(--app-bg)] px-2 text-[var(--app-hint)]">Or</span>
+                    </div>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={() => setIsQrScannerOpen(true)}
+                    disabled={isLoading}
+                    className="w-full py-2.5 rounded-lg border border-[var(--app-border)] bg-[var(--app-bg)] text-[var(--app-fg)] font-medium disabled:opacity-50 hover:bg-[var(--app-hover)] transition-colors"
+                >
+                    📷 Scan QR Code to Pair
+                </button>
+
                 {/* Help text */}
                 <div className="text-xs text-[var(--app-hint)] text-center">
                     Use the CLI_API_TOKEN from your server configuration
                 </div>
+
+                {/* QR Scanner Dialog */}
+                <QrScanner 
+                    isOpen={isQrScannerOpen}
+                    onClose={() => setIsQrScannerOpen(false)}
+                    onScanSuccess={handleQrScan}
+                />
             </div>
         </div>
     )

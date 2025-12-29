@@ -15,6 +15,7 @@ import { createPermissionsRoutes } from './routes/permissions'
 import { createMachinesRoutes } from './routes/machines'
 import { createGitRoutes } from './routes/git'
 import { createCliRoutes } from './routes/cli'
+import { createPairingRoutes } from './routes/pairing'
 import type { SSEManager } from '../sse/sseManager'
 import type { Server as BunServer } from 'bun'
 import type { Server as SocketEngine } from '@socket.io/bun-engine'
@@ -53,6 +54,7 @@ function createWebApp(options: {
     getSseManager: () => SSEManager | null
     jwtSecret: Uint8Array
     embeddedAssetMap: Map<string, EmbeddedWebAsset> | null
+    getStore: () => any
 }): Hono<WebAppEnv> {
     const app = new Hono<WebAppEnv>()
 
@@ -71,6 +73,9 @@ function createWebApp(options: {
     app.route('/cli', createCliRoutes(options.getSyncEngine))
 
     app.route('/api', createAuthRoutes(options.jwtSecret))
+
+    // Pairing routes (no auth required for pairing flow)
+    app.route('/api/pairing', createPairingRoutes(options.getStore()))
 
     app.use('/api/*', createAuthMiddleware(options.jwtSecret))
     app.route('/api', createEventsRoutes(options.getSseManager))
@@ -163,6 +168,7 @@ export async function startWebServer(options: {
     getSseManager: () => SSEManager | null
     jwtSecret: Uint8Array
     socketEngine: SocketEngine
+    getStore: () => any
 }): Promise<BunServer<WebSocketData>> {
     const isCompiled = isBunCompiled()
     const embeddedAssetMap = isCompiled ? await loadEmbeddedAssetMap() : null
@@ -170,7 +176,8 @@ export async function startWebServer(options: {
         getSyncEngine: options.getSyncEngine,
         getSseManager: options.getSseManager,
         jwtSecret: options.jwtSecret,
-        embeddedAssetMap
+        embeddedAssetMap,
+        getStore: options.getStore
     })
 
     const socketHandler = options.socketEngine.handler()
