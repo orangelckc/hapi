@@ -42,6 +42,17 @@ export type StoredMessage = {
     localId: string | null
 }
 
+export type StoredPairing = {
+    id: string
+    pairingToken: string
+    cliApiToken: string | null
+    machineId: string | null
+    createdAt: number
+    expiresAt: number
+    completedAt: number | null
+    userAgent: string | null
+}
+
 export type VersionedUpdateResult<T> =
     | { result: 'success'; version: number; value: T }
     | { result: 'version-mismatch'; version: number; value: T }
@@ -84,6 +95,17 @@ type DbMessageRow = {
     created_at: number
     seq: number
     local_id: string | null
+}
+
+type DbPairingRow = {
+    id: string
+    pairing_token: string
+    cli_api_token: string | null
+    machine_id: string | null
+    created_at: number
+    expires_at: number
+    completed_at: number | null
+    user_agent: string | null
 }
 
 function safeJsonParse(value: string | null): unknown | null {
@@ -137,6 +159,19 @@ function toStoredMessage(row: DbMessageRow): StoredMessage {
         createdAt: row.created_at,
         seq: row.seq,
         localId: row.local_id
+    }
+}
+
+function toStoredPairing(row: DbPairingRow): StoredPairing {
+    return {
+        id: row.id,
+        pairingToken: row.pairing_token,
+        cliApiToken: row.cli_api_token,
+        machineId: row.machine_id,
+        createdAt: row.created_at,
+        expiresAt: row.expires_at,
+        completedAt: row.completed_at,
+        userAgent: row.user_agent
     }
 }
 
@@ -222,6 +257,19 @@ export class Store {
             );
             CREATE INDEX IF NOT EXISTS idx_messages_session ON messages(session_id, seq);
             CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_local_id ON messages(session_id, local_id) WHERE local_id IS NOT NULL;
+
+            CREATE TABLE IF NOT EXISTS pairings (
+                id TEXT PRIMARY KEY,
+                pairing_token TEXT NOT NULL UNIQUE,
+                cli_api_token TEXT,
+                machine_id TEXT,
+                created_at INTEGER NOT NULL,
+                expires_at INTEGER NOT NULL,
+                completed_at INTEGER,
+                user_agent TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_pairings_token ON pairings(pairing_token);
+            CREATE INDEX IF NOT EXISTS idx_pairings_expires ON pairings(expires_at);
         `)
 
         const sessionColumns = this.db.prepare('PRAGMA table_info(sessions)').all() as Array<{ name: string }>
@@ -548,5 +596,74 @@ export class Store {
             ).all(sessionId, safeLimit) as DbMessageRow[]
 
         return rows.reverse().map(toStoredMessage)
+    }
+
+    // Pairing methods for QR code authentication
+    createPairing(pairingToken: string, expiresInMs: number = 5 * 60 * 1000): StoredPairing {
+        const now = Date.now()
+        const id = randomUUID()
+        const expiresAt = now + expiresInMs
+
+        this.db.prepare(`
+            INSERT INTO pairings (
+                id, pairing_token, cli_api_token, machine_id,
+                created_at, expires_at, completed_at, user_agent
+            ) VALUES (
+                @id, @pairing_token, NULL, NULL,
+                @created_at, @expires_at, NULL, NULL
+            )
+        `).run({
+            id,
+            pairing_token: pairingToken,
+            created_at: now,
+            expires_at: expiresAt
+        })
+
+        const row = this.db.prepare('SELECT * FROM pairings WHERE id = ?').get(id) as DbPairingRow | undefined
+        if (!row) {
+            throw new Error('Failed to create pairing')
+        }
+        return toStoredPairing(row)
+    }
+
+    getPairingByToken(pairingToken: string): StoredPairing | null {
+        const row = this.db.prepare(
+            'SELECT * FROM pairings WHERE pairing_token = ?'
+        ).get(pairingToken) as DbPairingRow | undefined
+
+        return row ? toStoredPairing(row) : null
+    }
+
+    completePairing(pairingToken: string, cliApiToken: string, machineId: string, userAgent: string | null): boolean {
+        const now = Date.now()
+        const result = this.db.prepare(`
+            UPDATE pairings
+            SET cli_api_token = @cli_api_token,
+                machine_id = @machine_id,
+                completed_at = @completed_at,
+                user_agent = @user_agent
+            WHERE pairing_token = @pairing_token
+              AND expires_at > @now
+              AND completed_at IS NULL
+        `).run({
+            pairing_token: pairingToken,
+            cli_api_token: cliApiToken,
+            machine_id: machineId,
+            completed_at: now,
+            user_agent: userAgent,
+            now
+        })
+
+        return result.changes === 1
+    }
+
+    cleanupExpiredPairings(): number {
+        const now = Date.now()
+        const result = this.db.prepare(`
+            DELETE FROM pairings
+            WHERE expires_at < @now AND completed_at IS NULL
+        `).run({ now })
+
+        return result.changes
     }
 }

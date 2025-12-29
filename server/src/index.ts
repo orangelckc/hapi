@@ -109,7 +109,8 @@ async function main() {
         getSyncEngine: () => syncEngine,
         getSseManager: () => sseManager,
         jwtSecret,
-        socketEngine: socketServer.engine
+        socketEngine: socketServer.engine,
+        getStore: () => store
     })
 
     // Start the bot if configured
