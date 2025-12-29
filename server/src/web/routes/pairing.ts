@@ -35,10 +35,13 @@ export function createPairingRoutes(store: Store): Hono<WebAppEnv> {
             store.createPairing(pairingToken, 5 * 60 * 1000)
 
             // Generate pairing URL that mobile app will use
-            const pairingUrl = `hapi://pair?token=${pairingToken}`
+            // Using both hapi:// and https:// for compatibility
+            const serverUrl = c.req.header('origin') || 'https://localhost:3006'
+            const hapiUrl = `hapi://pair?token=${pairingToken}`
+            const httpsUrl = `${serverUrl}/api/happy/pair?token=${pairingToken}`
 
-            // Generate QR code as data URL
-            const qrCodeDataUrl = await QRCode.toDataURL(pairingUrl, {
+            // Generate QR code as data URL (using hapi:// scheme for happy-mobile compatibility)
+            const qrCodeDataUrl = await QRCode.toDataURL(hapiUrl, {
                 errorCorrectionLevel: 'M',
                 margin: 1,
                 width: 300
@@ -46,7 +49,8 @@ export function createPairingRoutes(store: Store): Hono<WebAppEnv> {
 
             return c.json({
                 pairingToken,
-                pairingUrl,
+                pairingUrl: hapiUrl,
+                httpUrl: httpsUrl,
                 qrCode: qrCodeDataUrl,
                 expiresInSeconds: 300
             })

@@ -118,6 +118,12 @@ hapi
 
 4. Open the UI in a browser at the server URL and log in with `CLI_API_TOKEN`.
 
+   **Or use QR code pairing** (easier for mobile devices):
+   ```bash
+   hapi auth qr-pair
+   ```
+   Then scan the displayed QR code with your mobile device or web browser.
+
 ### Finding Your Access Token
 
 On first run, an Access Token is automatically generated and saved to `~/.hapi/settings.json`.
@@ -185,6 +191,7 @@ bun run build:single-exe
 ## Docs
 
 - `docs/WHY_NOT_HAPPY.md` - Why HAPI exists: architectural differences from Happy
+- `docs/QR_PAIRING.md` - QR code pairing guide (compatible with happy-mobile)
 - `cli/README.md` - CLI usage and config
 - `server/README.md` - Server setup and architecture
 - `web/README.md` - Web app behavior and dev workflow
