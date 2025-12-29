@@ -127,14 +127,14 @@ export function ComposerButtons(props: {
     onSwitch: () => void
 }) {
     return (
-        <div className="flex items-center justify-between px-2 pb-2">
-            <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between px-3 pb-3 pt-2">
+            <div className="flex items-center gap-2">
                 {props.showSettingsButton ? (
                     <button
                         type="button"
                         aria-label="Settings"
                         title="Settings"
-                        className="settings-button flex h-8 w-8 items-center justify-center rounded-full text-[var(--app-fg)]/60 transition-colors hover:bg-[var(--app-bg)] hover:text-[var(--app-fg)]"
+                        className="settings-button flex h-10 w-10 items-center justify-center rounded-full text-[var(--app-fg)]/60 transition-colors hover:bg-[var(--app-bg)] hover:text-[var(--app-fg)] active:bg-[var(--app-bg)] min-h-[44px] min-w-[44px]"
                         onClick={props.onSettingsToggle}
                         disabled={props.controlsDisabled}
                     >
@@ -147,7 +147,7 @@ export function ComposerButtons(props: {
                         type="button"
                         aria-label="Terminal"
                         title="Terminal"
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--app-fg)]/60 transition-colors hover:bg-[var(--app-bg)] hover:text-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--app-fg)]/60 transition-colors hover:bg-[var(--app-bg)] hover:text-emerald-500 active:bg-[var(--app-bg)] disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] min-w-[44px]"
                         onClick={props.onTerminal}
                         disabled={props.terminalDisabled}
                     >
@@ -161,7 +161,7 @@ export function ComposerButtons(props: {
                         aria-label="Abort"
                         title="Abort"
                         disabled={props.abortDisabled}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--app-fg)]/60 transition-colors hover:bg-[var(--app-bg)] hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--app-fg)]/60 transition-colors hover:bg-[var(--app-bg)] hover:text-red-500 active:bg-[var(--app-bg)] disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] min-w-[44px]"
                         onClick={props.onAbort}
                     >
                         <AbortIcon spinning={props.isAborting} />
@@ -174,7 +174,7 @@ export function ComposerButtons(props: {
                         aria-label="Switch to remote"
                         title="Switch to remote mode"
                         disabled={props.switchDisabled}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--app-fg)]/60 transition-colors hover:bg-[var(--app-bg)] hover:text-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--app-fg)]/60 transition-colors hover:bg-[var(--app-bg)] hover:text-blue-500 active:bg-[var(--app-bg)] disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] min-w-[44px]"
                         onClick={props.onSwitch}
                     >
                         <SwitchToRemoteIcon />
@@ -186,9 +186,9 @@ export function ComposerButtons(props: {
                 disabled={props.controlsDisabled || !props.canSend}
                 aria-label="Send"
                 title="Send"
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors min-h-[44px] min-w-[44px] ${
                     props.canSend && !props.controlsDisabled
-                        ? 'bg-black text-white'
+                        ? 'bg-black text-white hover:bg-black/90 active:bg-black/80'
                         : 'bg-[#C0C0C0] text-white'
                 } disabled:cursor-not-allowed`}
             >
